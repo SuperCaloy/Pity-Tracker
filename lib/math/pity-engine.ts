@@ -1,5 +1,5 @@
 // lib/math/pity-engine.ts - pure functions, deterministic, no side effects
-import { CalculationResult } from '@/types/pity';
+import { CalculationResult } from '../../types/pity';
 
 export function getCumulativeCurve(p: number, n: number): number[] {
   // TODO: implement piecewise probability engine

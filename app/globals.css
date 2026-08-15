@@ -1,0 +1,4 @@
+/* app/globals.css - Tailwind globals and custom design tokens */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

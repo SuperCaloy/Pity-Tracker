@@ -17,7 +17,7 @@ export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
       {...props}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-50 transition-colors duration-700 ease-awwwards" />
-      <div className="relative h-full w-full rounded-[calc(2rem-0.375rem)] bg-surface shadow-core p-8 backdrop-blur-2xl transition-colors duration-700 ease-awwwards">
+      <div className="relative h-full w-full rounded-[calc(2rem-0.375rem)] bg-surface shadow-sm p-6 md:p-8 backdrop-blur-2xl transition-colors duration-700 ease-awwwards">
         {children}
       </div>
     </div>

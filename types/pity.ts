@@ -5,6 +5,8 @@ export interface CalculationInput {
   pullsInput: number;
   pityCap?: number;
   pityOffset?: number; // from "already at pity"
+  guarantee?: boolean; // is 50/50 guarantee active
+  targetItemName?: string; // Optional specifically selected banner item
 }
 
 export interface CalculationResult {
@@ -12,5 +14,6 @@ export interface CalculationResult {
   currentP: number;             // cumulative probability at pullsInput
   thresholds: { p50: number; p80: number; p95: number };
   expectedValue: number;        // 1/effectiveRate, or curve-derived for soft pity
+  pdf: number[];                // probability density function
   monteCarloSpread?: number[];  // 1000 sampled first-success pull numbers, only if toggled
 }

@@ -32,7 +32,7 @@ export function SuccessGauge({ percentage = 42.1 }: { percentage?: number }) {
               strokeDasharray="314"
               strokeDashoffset="314"
               animate={{ strokeDashoffset: 314 - (314 * percentage) / 100 }}
-              transition={{ duration: 1.5, ease: [0.32, 0.72, 0, 1] }}
+              transition={{ type: "spring", damping: 25, stiffness: 100, mass: 0.8, bounce: 0.15 }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

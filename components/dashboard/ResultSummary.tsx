@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { usePityCalculation } from '@/hooks/usePityCalculation';
 import { CalculationInput } from '@/types/pity';
+import { PRESETS } from '@/lib/config/presets';
 
 export function ResultSummary({ input, onDismiss }: { input: CalculationInput | null, onDismiss?: () => void }) {
   const calculationResult = usePityCalculation(input);
@@ -46,10 +47,19 @@ export function ResultSummary({ input, onDismiss }: { input: CalculationInput | 
     tipMessage = `You are highly likely to get the character. Good luck!`;
   }
 
-  const estimatedCost = morePullsNeeded * 3; // Approx $3 per pull
+  const preset = PRESETS.find(p => p.id === input.baseRatePercent) || PRESETS[0];
+  const costPerPull = preset?.pricing?.costPerPull || 0;
+  
+  // Format cost based on currency
+  const formatter = new Intl.NumberFormat('en-PH', { 
+    style: 'currency', 
+    currency: preset?.pricing?.currency || 'PHP',
+    maximumFractionDigits: 0
+  });
+  const estimatedCost = formatter.format(morePullsNeeded * costPerPull);
 
   return (
-    <div className="relative w-full rounded-[2rem] bg-foreground/5 p-1.5 ring-1 ring-foreground/10 transition-colors duration-700 shadow-2xl">
+    <div className="relative w-full rounded-[2rem] bg-foreground/5 p-1.5 ring-1 ring-foreground/10 transition-colors duration-500 shadow-2xl">
       <div className="bg-surface shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[calc(2rem-6px)] p-8 md:p-10 flex flex-col gap-6 relative w-full overflow-hidden">
         
         {/* Top Active Color Accent */}
@@ -73,8 +83,13 @@ export function ResultSummary({ input, onDismiss }: { input: CalculationInput | 
           <div className="flex flex-col gap-2 mt-4 pt-6 border-t border-foreground/10">
             <span className="text-foreground tracking-widest uppercase text-xs font-semibold">Strategic Outlook</span> 
             <p className="font-sans text-base md:text-lg text-foreground/70 leading-relaxed">
-              Securing the remaining <strong className="text-foreground font-mono">{morePullsNeeded}</strong> pulls to hit your target will require an estimated budget of <strong className="text-foreground font-mono">~${estimatedCost}</strong>. Plan your resources accordingly to guarantee success.
+              Securing the remaining <strong className="text-foreground font-mono">{morePullsNeeded}</strong> pulls to hit your target will require an approximate budget of <strong className="text-foreground font-mono">~{estimatedCost}</strong>. Plan your resources accordingly to guarantee success.
             </p>
+            {preset?.pricing?.pricingDisclaimer && (
+              <span className="text-xs text-foreground/40 mt-1">
+                * {preset.pricing.pricingDisclaimer}
+              </span>
+            )}
           </div>
         )}
       </div>

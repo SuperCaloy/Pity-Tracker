@@ -46,7 +46,7 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
         className={`absolute w-px border-l border-dashed z-10 flex flex-col justify-center ${position === 'top' ? 'bottom-[60%] top-0' : 'top-[60%] bottom-0'}`}
         style={{ left: `${pos}%`, borderColor: 'currentColor' }}
       >
-        <span className={`absolute ${position === 'top' ? '-top-6' : 'bottom-0 -mb-6'} left-1/2 -translate-x-1/2 text-[10px] font-mono whitespace-nowrap ${colorClass}`}>
+        <span className={`absolute ${position === 'top' ? '-top-6 md:-top-7' : 'bottom-0 -mb-6 md:-mb-7'} left-1/2 -translate-x-1/2 text-[8px] md:text-[10px] font-mono whitespace-nowrap ${colorClass}`}>
           {label}
         </span>
       </div>
@@ -89,7 +89,7 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
               className="absolute top-0 bottom-0 left-0 bg-[#35C58A] rounded-full shadow-[0_0_20px_rgba(53,197,138,0.4)] z-20"
               initial={{ width: 0 }}
               animate={{ width: `${fillPercentage}%` }}
-              transition={{ type: "spring", damping: 20, stiffness: 100 }}
+              transition={{ type: "spring", damping: 25, stiffness: 120, mass: 0.8, bounce: 0.2 }}
             >
               {/* Glossy overlay */}
               <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-full" />

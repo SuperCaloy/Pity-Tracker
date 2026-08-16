@@ -17,13 +17,15 @@ export default function Home() {
   const [pulls, setPulls] = useState<string | number>('90');
   const [pityOffset, setPityOffset] = useState<string | number>('0');
   const [guarantee, setGuarantee] = useState(false);
+  const [targetItemName, setTargetItemName] = useState<string | undefined>(undefined);
 
   // Active State (Dashboard Freeze)
   const [activeInput, setActiveInput] = useState<CalculationInput>({
     baseRatePercent: 'genshin',
     pullsInput: 90,
     pityOffset: 0,
-    guarantee: false
+    guarantee: false,
+    targetItemName: undefined
   });
 
   const [mobileTab, setMobileTab] = useState<'calculator' | 'dashboard'>('calculator');
@@ -34,7 +36,8 @@ export default function Home() {
       baseRatePercent: preset,
       pullsInput: Number(pulls) || 0,
       pityOffset: Number(pityOffset) || 0,
-      guarantee: guarantee
+      guarantee: guarantee,
+      targetItemName: targetItemName
     });
     setShowModal(true);
     // Switch to dashboard tab on mobile when calculated
@@ -61,7 +64,7 @@ export default function Home() {
   // Safe fallback values
   const currentPercentage = calculationResult ? +(calculationResult.currentP * 100).toFixed(1) : 0;
   const thresholds = calculationResult?.thresholds;
-  const maxPulls = calculationResult?.pdf ? calculationResult.pdf.length - 1 : activePreset.curve.hardPity;
+  const maxPulls = calculationResult?.pdf ? calculationResult.pdf.length - 1 : (activePreset?.curve?.hardPity || 180);
 
   return (
     <main className="flex flex-col w-full min-h-[100dvh] bg-background">
@@ -104,6 +107,7 @@ export default function Home() {
                 pulls={pulls} setPulls={setPulls}
                 pityOffset={pityOffset} setPityOffset={setPityOffset}
                 guarantee={guarantee} setGuarantee={setGuarantee}
+                targetItemName={targetItemName} setTargetItemName={setTargetItemName}
               />
               
               {/* Premium Button Island Architecture */}
@@ -175,10 +179,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Center-Screen Modal Pop-up */}
+      {/* Responsive Modal (Bottom Sheet on Mobile, Center Modal on Desktop) */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8">
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-8">
             {/* Glassmorphic Backdrop */}
             <motion.div 
               initial={{ opacity: 0 }}
@@ -190,16 +194,22 @@ export default function Home() {
             
             {/* Modal Content */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, scale: 0.95, y: 20, filter: 'blur(10px)' }}
-              transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
-              className="relative w-full max-w-2xl z-10"
+              initial={{ opacity: 0, y: "100%", scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: "100%", scale: 0.95 }}
+              transition={{ type: "spring", damping: 28, stiffness: 300, mass: 0.8, bounce: 0.1 }}
+              className="relative w-full max-w-2xl z-10 bg-background md:bg-transparent rounded-t-[2rem] md:rounded-none max-h-[90vh] overflow-y-auto pb-8 md:pb-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-none"
             >
-              <ResultSummary 
-                input={activeInput} 
-                onDismiss={() => setShowModal(false)} 
-              />
+              {/* Mobile Drag Handle */}
+              <div className="w-full flex justify-center pt-4 pb-2 md:hidden">
+                <div className="w-12 h-1.5 bg-foreground/20 rounded-full" />
+              </div>
+              <div className="px-2 pb-2 md:p-0">
+                <ResultSummary 
+                  input={activeInput} 
+                  onDismiss={() => setShowModal(false)} 
+                />
+              </div>
             </motion.div>
           </div>
         )}

@@ -8,6 +8,7 @@ export interface PityEngineInput {
   hardPity?: number;
   pityOffset?: number;
   guarantee?: boolean;
+  winRate?: number;
 }
 
 function getRate(k: number, baseRate: number, softPityStart?: number, rampRate?: number, hardPity?: number): number {
@@ -25,7 +26,8 @@ export function calculatePity({
   rampRate,
   hardPity,
   pityOffset = 0,
-  guarantee = false
+  guarantee = false,
+  winRate = 0.5
 }: PityEngineInput): CalculationResult {
   // Input validation
   if (baseRate < 0 || baseRate > 1 || pullsInput < 0) {
@@ -51,8 +53,8 @@ export function calculatePity({
   }
 
   // f1: PDF of getting first 5-star from offset
-  const maxFirstPulls = N - pityOffset;
-  const f1: number[] = new Array(Math.max(1, maxFirstPulls + 1)).fill(0);
+  const maxFirstPulls = Math.max(1, N - pityOffset);
+  const f1: number[] = new Array(maxFirstPulls + 1).fill(0);
   let S1 = 1;
   for (let i = 1; i <= maxFirstPulls; i++) {
     const k = i + pityOffset;
@@ -63,24 +65,24 @@ export function calculatePity({
   }
 
   // Total PDF for getting the featured character
-  const maxTotalPulls = guarantee ? maxFirstPulls : maxFirstPulls + N;
+  const maxTotalPulls = Math.max(1, (guarantee || winRate === 1) ? maxFirstPulls : maxFirstPulls + N);
   const pdf: number[] = new Array(maxTotalPulls + 1).fill(0);
   
-  if (guarantee || baseRate === 1) { // If baseRate is 1, you always win the character
+  if (guarantee || baseRate === 1 || winRate === 1) { // If winRate is 1, you always win the character
     for (let i = 1; i <= maxFirstPulls; i++) {
       pdf[i] = f1[i];
     }
   } else {
     for (let n = 1; n <= maxTotalPulls; n++) {
       let prob = 0;
-      // Win 50/50 on the first 5-star
+      // Win 50/50 (or custom winRate) on the first 5-star
       if (n <= maxFirstPulls) {
-        prob += 0.5 * f1[n];
+        prob += winRate * f1[n];
       }
       // Lose 50/50 on first 5-star (at pull i), then win guarantee on second 5-star (at pull n - i)
       for (let i = 1; i < n; i++) {
         if (i <= maxFirstPulls && (n - i) <= N) {
-          prob += 0.5 * f1[i] * f0[n - i];
+          prob += (1 - winRate) * f1[i] * f0[n - i];
         }
       }
       pdf[n] = prob;

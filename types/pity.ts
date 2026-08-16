@@ -6,6 +6,7 @@ export interface CalculationInput {
   pityCap?: number;
   pityOffset?: number; // from "already at pity"
   guarantee?: boolean; // is 50/50 guarantee active
+  targetItemName?: string; // Optional specifically selected banner item
 }
 
 export interface CalculationResult {

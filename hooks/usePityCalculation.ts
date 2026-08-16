@@ -8,30 +8,38 @@ export function usePityCalculation(input: CalculationInput | null): CalculationR
     if (!input) return null;
 
     const preset = PRESETS.find(p => p.id === input.baseRatePercent) || PRESETS[0];
-    const { baseRate, softPityStart, rampRate, hardPity } = preset.curve;
 
-    // Apply 50/50 logic (guarantee) if needed
-    // The design doc says 50/50 is scoped out, but the form has "On Guarantee".
-    // If not on guarantee, the effective rate to get the featured unit is halved (or we double the pulls needed).
-    // For MVP, we will just pass the preset curve as is.
-    
     // Offset logic: start at pityOffset
     // We compute the full curve, then slice it or adjust it?
     // Actually, if we are at pityOffset = 12, then our first pull is actually pull 13.
-    // The easiest way is to compute the full curve, and our target is to find the probabilities starting from offset.
-    // But calculatePity is pure.
-    // For now, let's just use the engine directly without offset logic, or pass offset to engine.
-    // Wait, the engine doesn't take offset. We can just use the engine and the UI will show the curve from 0.
+    // For V1, the engine handles pityOffset natively.
     
-    // For V1, let's just pass the curve parameters directly to the engine
+    const baseRate = preset?.curve?.baseRate || 0.006;
+    let dynamicWinRate = preset?.curve?.winRate ?? 0.5;
+
+    if (preset?.activeBanner?.featured && preset.activeBanner.featured.length > 0) {
+      if (input.targetItemName) {
+        const targetItem = preset.activeBanner.featured.find(f => f.name === input.targetItemName);
+        if (targetItem && targetItem.rate) {
+          dynamicWinRate = Math.min(1, targetItem.rate / baseRate);
+        }
+      } else {
+        const sumRates = preset.activeBanner.featured.reduce((sum, f) => sum + (f.rate || 0), 0);
+        if (sumRates > 0) {
+          dynamicWinRate = Math.min(1, sumRates / baseRate);
+        }
+      }
+    }
+
     const result = calculatePity({
       baseRate,
-      softPityStart,
-      rampRate,
-      hardPity,
+      softPityStart: preset?.curve?.softPityStart,
+      rampRate: preset?.curve?.rampRate,
+      hardPity: preset?.curve?.hardPity || 90,
       pullsInput: input.pullsInput,
       pityOffset: input.pityOffset || 0,
-      guarantee: input.guarantee || false
+      guarantee: input.guarantee || false,
+      winRate: dynamicWinRate
     });
 
     return result;

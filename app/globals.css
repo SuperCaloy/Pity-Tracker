@@ -2,3 +2,49 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%; /* Clean Light Mode Background */
+    --foreground: 0 0% 2%;  
+    --surface: 0 0% 100%;   
+    --surface-border: 0 0% 0% / 0.05; 
+    --accent: 152 57% 53%; /* Emerald Jade */
+    --accent-fg: 0 0% 100%; 
+  }
+
+  .dark {
+    --background: 0 0% 2%; /* Ethereal Glass OLED Base (#050505) */
+    --foreground: 0 0% 98%;     
+    --surface: 0 0% 100% / 0.03; /* Vantablack cards */
+    --surface-border: 0 0% 100% / 0.08; /* White/8 Hairline */
+    --accent: 152 57% 53%; /* Emerald Jade */
+    --accent-fg: 0 0% 2%;       
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-accent/30 selection:text-accent transition-colors duration-700 ease-awwwards;
+  }
+  
+  /* Noise overlay for cinematic film grain & LCD backlight breakup */
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    opacity: 0.1; /* Very subtle on light mode */
+    mix-blend-mode: overlay;
+  }
+
+  .dark .bg-noise {
+    opacity: 0.3; /* More visible on dark mode */
+  }
+  
+  /* Instrument panel aesthetic: tabular nums for all digits to prevent jitter */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "genshin_character": {
+    "sourceUrl": ["https://paimon.moe/wish/tally"],
+    "description": "Genshin Impact Character Event Wish",
+    "lastVerified": "2026-08-27",
+    "expectedValueAny": 62.5,
+    "expectedValueFeatured": 93.75,
+    "tolerance": 0.5
+  },
+  "hsr_character": {
+    "sourceUrl": ["https://starrailstation.com/en/warp#global"],
+    "description": "Honkai: Star Rail Character Event Warp",
+    "lastVerified": "2026-08-27",
+    "expectedValueAny": 62.5,
+    "expectedValueFeatured": 93.75,
+    "tolerance": 0.5
+  },
+  "wuwa_character": {
+    "sourceUrl": ["https://wuwatracker.com/"],
+    "description": "Wuthering Waves Character Event Convene",
+    "lastVerified": "2026-08-27",
+    "expectedValueAny": 54.0,
+    "expectedValueFeatured": 81.0,
+    "tolerance": 0.5
+  },
+  "zzz_character": {
+    "sourceUrl": ["https://rng.moe/zzz/tracker"],
+    "description": "Zenless Zone Zero Exclusive Channel",
+    "lastVerified": "2026-08-27",
+    "expectedValueAny": 62.5,
+    "expectedValueFeatured": 93.75,
+    "tolerance": 0.5
+  }
+}

@@ -1,0 +1,358 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { Transition } from 'framer-motion';
+import { CalculatorForm } from '@/components/calculator/CalculatorForm';
+import { PityRunway } from '@/components/dashboard/PityRunway';
+import { SuccessGauge } from '@/components/dashboard/SuccessGauge';
+import { ThresholdCards } from '@/components/dashboard/ThresholdCards';
+import { ResultSummary } from '@/components/dashboard/ResultSummary';
+import { CalculationInput, CalculationResult } from '@/types/pity';
+import { usePityCalculation } from '@/hooks/usePityCalculation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { PRESETS } from '@/lib/config/presets';
+import { validateCalculationInput } from '@/lib/validation/calculator-schema';
+
+function buildCandidate(
+  preset: string,
+  pulls: string | number,
+  budget: string,
+  pityOffset: string | number,
+  guarantee: boolean,
+  targetItemName: string | undefined
+): CalculationInput {
+  const presetObj = PRESETS.find(p => p.id === preset) || PRESETS[0];
+  const costPerPull = presetObj?.pricing?.costPerPull || 0;
+  const extraPulls = (Number(budget) > 0 && costPerPull > 0) ? Math.floor(Number(budget) / costPerPull) : 0;
+  const totalPulls = (Number(pulls) || 0) + extraPulls;
+
+  return {
+    presetId: preset,
+    pullsInput: totalPulls,
+    pityOffset: Number(pityOffset) || 0,
+    guarantee: guarantee,
+    targetItemName: targetItemName
+  };
+}
+
+export default function Home() {
+  // Hoisted Form State (Draft)
+  const [preset, setPreset] = useState('genshin');
+  const [pulls, setPulls] = useState<string | number>('90');
+  const [budget, setBudget] = useState<string>('');
+  const [pityOffset, setPityOffset] = useState<string | number>('0');
+  const [guarantee, setGuarantee] = useState(false);
+  const [targetItemName, setTargetItemName] = useState<string | undefined>(undefined);
+
+  // Active State (Dashboard Freeze)
+  const [activeInput, setActiveInput] = useState<CalculationInput>({
+    presetId: 'genshin',
+    pullsInput: 90,
+    pityOffset: 0,
+    guarantee: false,
+    targetItemName: undefined
+  });
+
+  const [mobileTab, setMobileTab] = useState<'calculator' | 'dashboard'>('calculator');
+  const [isMobile, setIsMobile] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
+
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const onChange = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Refs for focus management
+  const modalRef = useRef<HTMLDivElement>(null);
+  const calculateButtonRef = useRef<HTMLButtonElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Focus management and escape key handling
+  useEffect(() => {
+    if (!showModal) return;
+
+    // Store the previously focused element
+    previousActiveElement.current = document.activeElement as HTMLElement;
+
+    // Focus the modal content on mount
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+
+    // Escape key handler
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowModal(false);
+      }
+    };
+
+    // Focus trap handler
+    const handleTabKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !modalRef.current) return;
+
+      const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleTabKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleTabKeyDown);
+      
+      // Restore focus to calculate button when modal closes
+      if (previousActiveElement.current && previousActiveElement.current !== modalRef.current) {
+        previousActiveElement.current.focus();
+      } else if (calculateButtonRef.current) {
+        calculateButtonRef.current.focus();
+      }
+    };
+  }, [showModal]);
+
+  const handleCalculate = () => {
+    const candidate: CalculationInput = buildCandidate(preset, pulls, budget, pityOffset, guarantee, targetItemName);
+    const validation = validateCalculationInput(candidate);
+    if (!validation.ok) {
+      setInputError(validation.errors.join('. '));
+      return;
+    }
+    setInputError(null);
+    setActiveInput(candidate);
+    
+    // Always show the result summary modal to provide immediate feedback
+    setShowModal(true);
+    
+    // Switch to dashboard tab on mobile when calculated
+    setMobileTab('dashboard');
+  };
+
+  const calculationResult = usePityCalculation(activeInput);
+  const activePreset = PRESETS.find(p => p.id === activeInput.presetId) || PRESETS[0];
+  
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20, filter: 'blur(10px)' },
+    animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    transition: reducedMotion ? { duration: 0.01 } : { duration: 0.8, ease: [0.32, 0.72, 0, 1] }
+  };
+
+  const staggerContainer = {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 1,
+      transition: reducedMotion ? { duration: 0.01 } : { staggerChildren: 0.1, delayChildren: 0.1 }
+    }
+  };
+
+  // Safe fallback values
+  const currentPercentage = calculationResult ? +(calculationResult.currentP * 100).toFixed(1) : 0;
+  const thresholds = calculationResult?.thresholds;
+  const maxPulls = calculationResult?.pdf ? calculationResult.pdf.length - 1 : (activePreset?.curve?.hardPity || 180);
+
+  return (
+    <main className="flex flex-col w-full min-h-[100dvh] bg-background">
+      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-32 md:pb-16 pt-6 md:pt-10 flex flex-col gap-8 md:gap-12">
+        
+        {/* Main Layout (Asymmetrical Bento) */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start w-full"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
+          
+          {/* Left Column: Calculator */}
+          <motion.section 
+            variants={fadeInUp} 
+            className={`md:col-span-5 lg:col-span-4 w-full flex-col gap-6 md:gap-4 ${mobileTab === 'calculator' ? 'flex' : 'hidden md:flex'}`}
+          >
+            <motion.div
+              key={isMobile ? mobileTab : 'static'}
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={reducedMotion ? { duration: 0.01 } : { duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="w-full"
+            >
+            <div className="w-full flex flex-col gap-6 md:gap-4">
+              <CalculatorForm 
+                preset={preset} setPreset={setPreset}
+                pulls={pulls} setPulls={setPulls}
+                budget={budget} setBudget={setBudget}
+                pityOffset={pityOffset} setPityOffset={setPityOffset}
+                guarantee={guarantee} setGuarantee={setGuarantee}
+                targetItemName={targetItemName} setTargetItemName={setTargetItemName}
+              />
+              
+              {/* Calculate footer, sticky so it stays reachable when Advanced is open */}
+              <div className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] md:bottom-6 z-10 flex w-full flex-col items-center gap-2 md:gap-4 rounded-2xl bg-background/80 p-2 backdrop-blur-xl">
+                <button 
+                  ref={calculateButtonRef}
+                  onClick={handleCalculate}
+                  className="group relative w-full flex items-center justify-center gap-3 overflow-hidden rounded-full bg-foreground text-background px-6 py-4 md:px-8 md:py-3.5 font-display text-base md:text-lg tracking-wide shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                  <span className="relative z-10">Calculate Results</span>
+                  
+                  {/* Button-in-Button Trailing Icon */}
+                  <div className="relative z-10 flex h-6 w-6 md:h-8 md:w-8 items-center justify-center rounded-full bg-background/20 transition-transform duration-500 group-hover:translate-x-1 group-hover:scale-105">
+                    <svg className="h-3 w-3 md:h-4 md:w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {inputError && (
+                    <motion.p
+                      role="alert"
+                      aria-live="polite"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={reducedMotion ? { duration: 0.01 } : { duration: 0.2, ease: 'easeOut' }}
+                      className="ml-2 md:ml-0 text-xs font-medium text-red-600 dark:text-red-400"
+                    >
+                      {inputError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+            </motion.div>
+          </motion.section>
+
+          {/* Right Column: Dashboard */}
+          <motion.section 
+            variants={fadeInUp} 
+            className={`md:col-span-7 lg:col-span-8 flex-col gap-6 md:gap-8 w-full ${mobileTab === 'dashboard' ? 'flex' : 'hidden md:flex'}`}
+          >
+            <motion.div
+              key={isMobile ? mobileTab : 'static'}
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={reducedMotion ? { duration: 0.01 } : { duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="flex flex-col gap-6 md:gap-8 w-full"
+            >
+            <PityRunway 
+              currentPull={activeInput.pullsInput + activeInput.pityOffset} 
+              maxPulls={maxPulls} 
+              softPityStart={activePreset.curve.softPityStart} 
+              thresholds={thresholds} 
+              costPerPull={activePreset.pricing.costPerPull}
+              currency={activePreset.pricing.currency}
+            />
+            
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8 w-full">
+              <div className="xl:col-span-5 w-full">
+                <SuccessGauge percentage={currentPercentage} />
+              </div>
+              <div className="xl:col-span-7 w-full">
+                <ThresholdCards thresholds={thresholds} />
+              </div>
+            </div>
+            </motion.div>
+          </motion.section>
+
+        </motion.div>
+      </div>
+
+      {/* Mobile Bottom Navigation (Tabs) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden pb-4 pt-2 px-2 bg-background/80 backdrop-blur-xl border-t border-foreground/10">
+        <div className="relative flex justify-around items-center" role="tablist" aria-label="Main navigation">
+          <button
+            role="tab"
+            aria-selected={mobileTab === 'calculator'}
+            onClick={() => setMobileTab('calculator')}
+            className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl transition-all duration-300 ${
+              mobileTab === 'calculator' 
+                ? 'bg-foreground/10 text-foreground scale-105' 
+                : 'text-foreground/50 hover:bg-foreground/5'
+            }`}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16.01" y1="14" y2="14"/><line x1="16" x2="16.01" y1="18" y2="18"/><line x1="12" x2="12.01" y1="14" y2="14"/><line x1="12" x2="12.01" y1="18" y2="18"/><line x1="8" x2="8.01" y1="14" y2="14"/><line x1="8" x2="8.01" y1="18" y2="18"/></svg>
+            <span className="text-[10px] font-semibold font-sans uppercase tracking-widest">Calculator</span>
+          </button>
+          <button
+            role="tab"
+            aria-selected={mobileTab === 'dashboard'}
+            onClick={() => setMobileTab('dashboard')}
+            className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl transition-all duration-300 ${
+              mobileTab === 'dashboard' 
+                ? 'bg-foreground/10 text-foreground scale-105' 
+                : 'text-foreground/50 hover:bg-foreground/5'
+            }`}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <span className="text-[10px] font-semibold font-sans uppercase tracking-widest">Dashboard</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Responsive Modal (Bottom Sheet on Mobile, Center Modal on Desktop) */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-8">
+            {/* Glassmorphic Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={reducedMotion ? { duration: 0.01 } : { duration: 0.7 }}
+              onClick={() => setShowModal(false)}
+              aria-hidden="true"
+              className="absolute inset-0 bg-background/80 backdrop-blur-xl transition-opacity duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+            />
+            
+            {/* Modal Content */}
+            <motion.div
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="result-summary-title"
+              tabIndex={-1}
+              initial={{ opacity: 0, y: "100%", scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: "100%", scale: 0.95 }}
+              transition={reducedMotion ? { duration: 0.01 } : { type: "spring", damping: 28, stiffness: 300, mass: 0.8, bounce: 0.1 }}
+              className="relative w-full max-w-2xl z-10 bg-background md:bg-transparent rounded-t-[2rem] md:rounded-none max-h-[90vh] overflow-y-auto pb-8 md:pb-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-none outline-none"
+            >
+              {/* Mobile Drag Handle */}
+              <div className="w-full flex justify-center pt-4 pb-2 md:hidden">
+                <div className="w-12 h-1.5 bg-foreground/20 rounded-full" />
+              </div>
+              <div className="px-2 pb-2 md:p-0">
+                <ResultSummary 
+                  input={activeInput} 
+                  result={calculationResult}
+                  onDismiss={() => setShowModal(false)} 
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </main>
+  );
+}

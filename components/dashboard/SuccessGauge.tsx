@@ -1,9 +1,18 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Card } from '../ui/Card';
+import { getRarityZone } from '@/lib/rarity-zone';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import type { Transition } from 'framer-motion';
 
-export function SuccessGauge({ percentage = 42.1 }: { percentage?: number }) {
+export function SuccessGauge({ percentage }: { percentage: number }) {
+  const zone = getRarityZone(percentage);
+  const reducedMotion = useReducedMotion();
+
+  const transition: Transition = reducedMotion
+    ? { duration: 0.01 }
+    : { type: "spring", damping: 25, stiffness: 100, mass: 0.8, bounce: 0.15 };
+
   return (
     <div className="relative w-full rounded-[2rem] bg-foreground/5 p-1.5 ring-1 ring-foreground/10 transition-colors duration-700 h-full">
       <div className="flex flex-col items-center justify-center gap-4 h-full w-full rounded-[calc(2rem-6px)] bg-surface shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-6 md:p-8 relative overflow-hidden">
@@ -26,17 +35,17 @@ export function SuccessGauge({ percentage = 42.1 }: { percentage?: number }) {
               cy="60"
               r="50"
               fill="none"
-              className="stroke-[#35C58A]"
+              className={zone.strokeClass}
               strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray="314"
               strokeDashoffset="314"
               animate={{ strokeDashoffset: 314 - (314 * percentage) / 100 }}
-              transition={{ type: "spring", damping: 25, stiffness: 100, mass: 0.8, bounce: 0.15 }}
+              transition={transition}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-mono text-3xl md:text-4xl xl:text-5xl font-bold tracking-tight text-foreground tabular-nums drop-shadow-sm">
+            <span className={`font-mono text-3xl md:text-4xl xl:text-5xl font-bold tracking-tight tabular-nums drop-shadow-sm ${zone.textClass}`}>
               {percentage}%
             </span>
             <span className="font-display text-[10px] md:text-xs uppercase tracking-widest text-foreground/50 mt-1 md:mt-2 font-semibold">

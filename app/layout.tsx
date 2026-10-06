@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '../components/ThemeProvider';
-import { ThemeToggle } from '../components/ThemeToggle';
+import { SiteHeader } from '../components/SiteHeader';
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono' });
@@ -25,14 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           disableTransitionOnChange
         >
           {/* Global Top Navigation */}
-          <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-16 border-b border-foreground/5 bg-background/20 backdrop-blur-xl transition-colors duration-700 ease-awwwards">
-            <div className="flex items-center gap-2">
-              <span className="font-display font-bold text-foreground tracking-tight">PITY TRACKER</span>
-            </div>
-            <div className="flex items-center h-full">
-              <ThemeToggle />
-            </div>
-          </nav>
+          <SiteHeader />
           
           <div className="pt-16">
             {children}

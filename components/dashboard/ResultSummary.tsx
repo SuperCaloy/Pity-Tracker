@@ -1,33 +1,46 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePityCalculation } from '@/hooks/usePityCalculation';
-import { CalculationInput } from '@/types/pity';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { CalculationInput, CalculationResult } from '@/types/pity';
 import { PRESETS } from '@/lib/config/presets';
+import { formatCurrency } from '../../lib/utils';
+import { getRarityZone } from '@/lib/rarity-zone';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-export function ResultSummary({ input, onDismiss }: { input: CalculationInput | null, onDismiss?: () => void }) {
-  const calculationResult = usePityCalculation(input);
+export function ResultSummary({ input, result, onDismiss }: { input: CalculationInput | null, result: CalculationResult | null, onDismiss?: () => void }) {
+  const reducedMotion = useReducedMotion();
+  const percentageValue = useMotionValue(0);
+  const percentageDisplay = useTransform(percentageValue, (v) => `${v.toFixed(1)}%`);
 
   useEffect(() => {
-    if (!input || !onDismiss) return;
-    const timer = setTimeout(() => {
-      onDismiss();
-    }, 60000);
-    return () => clearTimeout(timer);
-  }, [input, onDismiss]);
+    return () => {
+      percentageValue.set(0);
+    };
+  }, []);
 
-  if (!input || !calculationResult) return null;
+  const currentPercentage = input && result ? +(result.currentP * 100).toFixed(1) : 0;
+  const thresholds = result?.thresholds;
 
-  const currentPercentage = +(calculationResult.currentP * 100).toFixed(1);
-  const thresholds = calculationResult.thresholds;
+  const zone = getRarityZone(currentPercentage);
+  const zoneColor = zone.hex || 'currentColor';
 
-  // Determine rarity zone
-  let zoneName = "Void";
-  let zoneColor = "text-foreground/50";
-  let activeColor = "hsl(var(--foreground))";
-  if (currentPercentage >= 95) { zoneName = "Gold"; zoneColor = "text-[#F0B429]"; activeColor = "#F0B429"; }
-  else if (currentPercentage >= 80) { zoneName = "Amethyst"; zoneColor = "text-[#9C7CF4]"; activeColor = "#9C7CF4"; }
-  else if (currentPercentage >= 50) { zoneName = "Jade"; zoneColor = "text-[#35C58A]"; activeColor = "#35C58A"; }
+  useEffect(() => {
+    if (!input || !result) {
+      percentageValue.set(0);
+      return;
+    }
+
+    if (reducedMotion) {
+      percentageValue.set(currentPercentage);
+      return;
+    }
+
+    const controls = animate(percentageValue, currentPercentage, { type: "spring", damping: 25, stiffness: 100, mass: 0.8, bounce: 0.15 });
+    return () => controls.stop();
+  }, [input, result, currentPercentage, reducedMotion]);
+
+  if (!input || !result) return null;
 
   // Tip logic
   let tipMessage = "";
@@ -47,23 +60,16 @@ export function ResultSummary({ input, onDismiss }: { input: CalculationInput | 
     tipMessage = `You are highly likely to get the character. Good luck!`;
   }
 
-  const preset = PRESETS.find(p => p.id === input.baseRatePercent) || PRESETS[0];
+  const preset = PRESETS.find(p => p.id === input.presetId) || PRESETS[0];
   const costPerPull = preset?.pricing?.costPerPull || 0;
-  
-  // Format cost based on currency
-  const formatter = new Intl.NumberFormat('en-PH', { 
-    style: 'currency', 
-    currency: preset?.pricing?.currency || 'PHP',
-    maximumFractionDigits: 0
-  });
-  const estimatedCost = formatter.format(morePullsNeeded * costPerPull);
+  const estimatedCost = formatCurrency(morePullsNeeded * costPerPull, preset?.pricing?.currency || 'PHP');
 
   return (
     <div className="relative w-full rounded-[2rem] bg-foreground/5 p-1.5 ring-1 ring-foreground/10 transition-colors duration-500 shadow-2xl">
       <div className="bg-surface shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[calc(2rem-6px)] p-8 md:p-10 flex flex-col gap-6 relative w-full overflow-hidden">
         
         {/* Top Active Color Accent */}
-        <div className="absolute top-0 left-0 w-full h-1.5" style={{ backgroundColor: activeColor }} />
+        <div className="absolute top-0 left-0 w-full h-1.5" style={{ backgroundColor: zone.hex }} />
         
         {onDismiss && (
           <button 
@@ -75,8 +81,8 @@ export function ResultSummary({ input, onDismiss }: { input: CalculationInput | 
           </button>
         )}
         
-        <p className="font-sans text-xl md:text-2xl text-foreground/90 leading-relaxed pr-10">
-          You currently have a <strong className="text-foreground text-3xl md:text-4xl tabular-nums ml-1 font-display tracking-tight drop-shadow-sm">{currentPercentage}% chance</strong> of success. You are sitting in the <strong className={`ml-1 ${zoneColor}`}>{zoneName} zone</strong>. {tipMessage}
+        <p id="result-summary-title" className="font-sans text-xl md:text-2xl text-foreground/90 leading-relaxed pr-10">
+          You currently have a <strong className="text-foreground text-3xl md:text-4xl tabular-nums ml-1 font-display tracking-tight drop-shadow-sm"><motion.span>{percentageDisplay}</motion.span> chance</strong> of success. You are sitting in the <motion.strong className="ml-1" initial={{ color: reducedMotion ? zoneColor : 'currentColor' }} animate={{ color: zoneColor }} transition={{ duration: reducedMotion ? 0 : 0.5 }}>{zone.name} zone</motion.strong>. {tipMessage}
         </p>
         
         {morePullsNeeded > 0 && (

@@ -17,6 +17,15 @@ export interface PityCurve {
   hardPity: number;        
   rampRate?: number;       
   winRate?: number;        // e.g. 0.5 for 50/50 systems
+  has50_50?: boolean;
+  resetsCounterOnGuarantee?: boolean;
+  modelKind?: 'bernoulli' | 'counter';
+  guaranteeType?: string;
+  guaranteeCost?: number;  // e.g. 200 for spark
+  empiricalRateTable?: number[]; // Pre-computed array of rates [pull1, pull2, ..., pull90]
+  modelVersion?: string;
+  rateUpProb?: number;
+  M?: number;
 }
 
 export interface GamePreset {
@@ -36,13 +45,26 @@ export const PRESETS: GamePreset[] = [
     id: "genshin",
     title: "Genshin Impact",
     publisher: "HoYoverse",
-    curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5 },
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 55.6, costPerPull: 89.78, pricingDisclaimer: "Approximate, calculated from official USD pricing (w/ 23.5% regional bonus)." },
+    curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 7.0 Phase 1 (Aug 12 - Sep 1, 2026)",
+      name: "Version 7.1 Phase 1 (Sep 23 - Oct 13, 2026)",
       featured: [
-        { name: "Odette (New)", rate: 0.003 },
-        { name: "Arlecchino (Rerun)", rate: 0.003 }
+        { name: "Vesna", rate: 0.003 }
+      ]
+    }
+  },
+  {
+    id: "genshin_weapon",
+    title: "Genshin Impact Weapon",
+    publisher: "HoYoverse",
+    curve: { baseRate: 0.007, softPityStart: 63, hardPity: 80, rampRate: 0.07, winRate: 0.375, rateUpProb: 0.75, M: 2, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
+    activeBanner: {
+      name: "Version 7.1 Phase 1 Weapon (Sep 23 - Oct 13, 2026)",
+      featured: [
+        { name: "Beyond the Chrysalis", rate: 0.002625 },
+        { name: "Hymn of the Maelstrom", rate: 0.002625 }
       ]
     }
   },
@@ -50,13 +72,12 @@ export const PRESETS: GamePreset[] = [
     id: "hsr",
     title: "Honkai: Star Rail",
     publisher: "HoYoverse",
-    curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5 },
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 55.6, costPerPull: 89.78, pricingDisclaimer: "Approximate, calculated from official USD pricing (w/ 23.5% regional bonus)." },
+    curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 4.4 (Jul 15 - Aug 25, 2026)",
+      name: "Version 4.6 (Sep 28 - Nov 10, 2026)",
       featured: [
-        { name: "Himeko Nova", rate: 0.003 },
-        { name: "Anaxa", rate: 0.003 }
+        { name: "Pearl", rate: 0.003 }
       ]
     }
   },
@@ -64,13 +85,12 @@ export const PRESETS: GamePreset[] = [
     id: "zzz",
     title: "Zenless Zone Zero",
     publisher: "HoYoverse",
-    curve: { baseRate: 0.006, softPityStart: 80, hardPity: 90, rampRate: 0.09, winRate: 0.5 },
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 55.6, costPerPull: 89.78, pricingDisclaimer: "Approximate, calculated from official USD pricing (w/ 23.5% regional bonus)." },
+    curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 3.1 (Jul 29 - Sep 8, 2026)",
+      name: "Version 3.2 Phase 2 (Sep 30 - Oct 20, 2026)",
       featured: [
-        { name: "Remielle", rate: 0.003 },
-        { name: "Aria", rate: 0.003 }
+        { name: "Roxy", rate: 0.003 }
       ]
     }
   },
@@ -78,13 +98,12 @@ export const PRESETS: GamePreset[] = [
     id: "wuwa",
     title: "Wuthering Waves",
     publisher: "Kuro Games",
-    curve: { baseRate: 0.008, softPityStart: 66, hardPity: 80, rampRate: 0.06, winRate: 0.5 },
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 110.88, pricingDisclaimer: "Based on last verified official USD pricing." },
+    curve: { baseRate: 0.008, softPityStart: 66, hardPity: 80, rampRate: 0.0469, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 3.5 (Jul 30 - Aug 19, 2026)",
+      name: "Version 3.7 Phase 1 (Sep 30 - Oct 22, 2026)",
       featured: [
-        { name: "Suisui", rate: 0.004 },
-        { name: "Aemeath", rate: 0.004 }
+        { name: "Hsin", rate: 0.004 }
       ]
     }
   },
@@ -92,13 +111,12 @@ export const PRESETS: GamePreset[] = [
     id: "bluearchive",
     title: "Blue Archive",
     publisher: "Nexon",
-    curve: { baseRate: 0.007, hardPity: 200, winRate: 1 }, 
-    pricing: { currency: "PHP", packPrice: 3990, pullsPerPack: 55, costPerPull: 81.20, pricingDisclaimer: "Based on last verified official USD pricing." },
+    curve: { baseRate: 0.007, hardPity: 200, winRate: 1, has50_50: false, modelKind: 'counter', guaranteeCost: 200 }, 
+    pricing: { currency: "PHP", packPrice: 3990, pullsPerPack: 55, costPerPull: 72.55, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Global Banner (Aug 18 - Sep 1, 2026)",
+      name: "Band Rerun (Oct 6 - Oct 13, 2026)",
       featured: [
-        { name: "Niko (Limited)", rate: 0.007 },
-        { name: "Kurumi (Limited)", rate: 0.007 }
+        { name: "Kazusa (Band)", rate: 0.007 }
       ]
     }
   },
@@ -106,12 +124,12 @@ export const PRESETS: GamePreset[] = [
     id: "arknights_endfield",
     title: "Arknights: Endfield",
     publisher: "Hypergryph",
-    curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, winRate: 0.5 }, 
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 110.88, pricingDisclaimer: "Based on last verified official USD pricing." },
+    curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' }, 
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Global Release (Aug 9 - 30, 2026)",
+      name: "Version 1.5 Phase 2 (Sep 24 - Oct 15, 2026)",
       featured: [
-        { name: "Liino", rate: 0.003 }
+        { name: "Yvonne", rate: 0.003 }
       ]
     }
   },
@@ -119,14 +137,12 @@ export const PRESETS: GamePreset[] = [
     id: "nikke",
     title: "Goddess of Victory: NIKKE",
     publisher: "Shift Up",
-    curve: { baseRate: 0.02, hardPity: 200, winRate: 1 }, 
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 25, costPerPull: 223.44, pricingDisclaimer: "Based on last verified official USD pricing." },
+    curve: { baseRate: 0.02, hardPity: 200, winRate: 1, has50_50: false, modelKind: 'counter', guaranteeCost: 200 }, 
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 25, costPerPull: 199.6, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Persona Collab (From Aug 13, 2026)",
+      name: "Halloween 2026 (Oct 8 - Oct 28, 2026)",
       featured: [
-        { name: "Maxwell (Limited)", rate: 0.02 },
-        { name: "Queen (Collab)", rate: 0.02 },
-        { name: "Yukiko (Collab)", rate: 0.02 }
+        { name: "Belorta (Pumpkin Witch)", rate: 0.02 }
       ]
     }
   },
@@ -134,8 +150,8 @@ export const PRESETS: GamePreset[] = [
     id: "fgo",
     title: "Fate/Grand Order",
     publisher: "Lasengle",
-    curve: { baseRate: 0.008, hardPity: 330, winRate: 1 }, 
-    pricing: { currency: "PHP", packPrice: 3990, pullsPerPack: 55.6, costPerPull: 80.08, pricingDisclaimer: "Based on last verified official USD pricing." },
+    curve: { baseRate: 0.008, hardPity: 330, winRate: 1, has50_50: false, modelKind: 'counter', guaranteeCost: 330 }, 
+    pricing: { currency: "PHP", packPrice: 3990, pullsPerPack: 55.6, costPerPull: 71.76, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
       name: "Banner TBD",
       featured: [
@@ -147,14 +163,12 @@ export const PRESETS: GamePreset[] = [
     id: "epicseven",
     title: "Epic Seven",
     publisher: "Smilegate",
-    curve: { baseRate: 0.01, hardPity: 120, winRate: 1 }, 
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 40, costPerPull: 139.44, pricingDisclaimer: "Based on last verified official USD pricing." },
+    curve: { baseRate: 0.01, hardPity: 120, winRate: 1, has50_50: false, modelKind: 'counter', guaranteeCost: 120 }, 
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 40, costPerPull: 124.75, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Secret Summer (Jun 25 - Aug 26, 2026)",
+      name: "Banner TBD",
       featured: [
-        { name: "Fumyr", rate: 0.01 },
-        { name: "Aube", rate: 0.01 },
-        { name: "Tidal Rited Elvira", rate: 0.01 }
+        { name: "Fumyr", rate: 0.01 }
       ]
     }
   },
@@ -162,8 +176,8 @@ export const PRESETS: GamePreset[] = [
     id: "sla",
     title: "Solo Leveling: Arise",
     publisher: "Netmarble",
-    curve: { baseRate: 0.012, softPityStart: 64, hardPity: 80, rampRate: 0.05, winRate: 0.5 }, 
-    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 40, costPerPull: 139.44, pricingDisclaimer: "Based on last verified official USD pricing." },
+    curve: { baseRate: 0.012, softPityStart: 64, hardPity: 80, rampRate: 0.05, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli', guaranteeCost: 80 }, 
+    pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 40, costPerPull: 124.75, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
       name: "Banner TBD",
       featured: [

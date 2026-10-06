@@ -1,12 +1,18 @@
 // types/pity.ts - Shared TS types (CalculationInput, CalculationResult)
 
 export interface CalculationInput {
-  baseRatePercent: string;
+  presetId: string;
   pullsInput: number;
   pityCap?: number;
   pityOffset?: number; // from "already at pity"
   guarantee?: boolean; // is 50/50 guarantee active
   targetItemName?: string; // Optional specifically selected banner item
+}
+
+export interface GuaranteeCost {
+  pullsToGuarantee: number;
+  evCost: number;
+  currencyNote: string;
 }
 
 export interface CalculationResult {
@@ -16,4 +22,6 @@ export interface CalculationResult {
   expectedValue: number;        // 1/effectiveRate, or curve-derived for soft pity
   pdf: number[];                // probability density function
   monteCarloSpread?: number[];  // 1000 sampled first-success pull numbers, only if toggled
+  modelKind?: string;           // 'bernoulli' | 'counter'
+  guaranteeCost?: GuaranteeCost;
 }

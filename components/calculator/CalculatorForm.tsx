@@ -1,6 +1,10 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+import { animate, AnimatePresence, motion } from 'framer-motion';
+
 import { PRESETS } from '@/lib/config/presets';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export interface CalculatorFormProps {
   preset: string;
@@ -13,6 +17,8 @@ export interface CalculatorFormProps {
   setGuarantee: (val: boolean) => void;
   targetItemName: string | undefined;
   setTargetItemName: (val: string | undefined) => void;
+  budget: string;
+  setBudget: (val: string) => void;
 }
 
 export function CalculatorForm({
@@ -20,12 +26,29 @@ export function CalculatorForm({
   pulls, setPulls,
   pityOffset, setPityOffset,
   guarantee, setGuarantee,
-  targetItemName, setTargetItemName
+  targetItemName, setTargetItemName,
+  budget, setBudget
 }: CalculatorFormProps) {
 
   const activePreset = PRESETS.find(p => p.id === preset) || PRESETS[0];
   const hardPity = activePreset.curve?.hardPity || 90;
   const isPityOverLimit = Number(pityOffset) >= hardPity;
+  const reducedMotion = useReducedMotion();
+  const valuesRef = useRef<HTMLDivElement>(null);
+  const prevPresetRef = useRef(preset);
+
+  useEffect(() => {
+    const el = valuesRef.current;
+    if (!el) return;
+    if (reducedMotion) {
+      el.style.opacity = '1';
+      return;
+    }
+    if (prevPresetRef.current === preset) return;
+    prevPresetRef.current = preset;
+    const controls = animate(el, { opacity: [1, 0.6, 1] }, { duration: 0.2, ease: [0.32, 0.72, 0, 1] });
+    return () => controls.stop();
+  }, [preset, reducedMotion]);
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -55,13 +78,20 @@ export function CalculatorForm({
         </div>
 
         {/* Active Banner Info */}
-        {activePreset?.activeBanner && (
-          <div className="flex flex-col gap-3 ml-1 mt-2 bg-foreground/5 p-4 rounded-2xl border border-foreground/10 transition-colors duration-700">
+        <AnimatePresence initial={false}>
+          {activePreset?.activeBanner && (
+            <motion.div
+              initial={reducedMotion ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
+              transition={reducedMotion ? { duration: 0.01 } : { duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="flex flex-col gap-3 ml-1 mt-2 bg-foreground/5 p-4 rounded-2xl border border-foreground/10 transition-colors duration-700"
+            >
             <div className="flex flex-col gap-1">
               <span className="text-[10px] text-foreground/50 tracking-widest uppercase font-semibold">Active Banner</span>
               <span className="text-sm font-sans font-medium text-foreground/90">{activePreset.activeBanner.name || 'TBD'}</span>
             </div>
-            
+
             {activePreset.activeBanner.featured && activePreset.activeBanner.featured.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-[10px] text-foreground/50 tracking-widest uppercase font-semibold">Featured Items (Select Target)</span>
@@ -69,12 +99,13 @@ export function CalculatorForm({
                   {activePreset.activeBanner.featured.map((f, i) => {
                     const isSelected = targetItemName === f.name;
                     return (
-                      <button 
+                      <button
                         key={i}
                         onClick={() => setTargetItemName(isSelected ? undefined : f.name)}
+                        aria-pressed={isSelected}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.98] ${
-                          isSelected 
-                            ? 'bg-accent/10 border-accent/30 ring-1 ring-accent/30' 
+                          isSelected
+                            ? 'bg-accent/10 border-accent/30 ring-1 ring-accent/30'
                             : 'bg-background/50 border-foreground/10 hover:border-foreground/30 hover:bg-background/80'
                         }`}
                       >
@@ -92,81 +123,106 @@ export function CalculatorForm({
                 </div>
               </div>
             )}
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label htmlFor="targetPulls" className="text-xs font-display uppercase tracking-widest font-semibold text-foreground/60 ml-2">Available Pulls</label>
-        {/* Double-Bezel Outer Shell */}
-        <div className="relative w-full rounded-[2rem] bg-foreground/5 p-1.5 ring-1 ring-foreground/10 transition-colors duration-700">
-          <input
-            id="targetPulls"
-            type="number"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="0"
-            value={pulls}
-            onChange={(e) => setPulls(e.target.value)}
-            min={1}
-            className="flex h-14 w-full rounded-[calc(2rem-6px)] bg-surface px-6 py-2 text-lg font-mono font-medium shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent text-foreground disabled:cursor-not-allowed disabled:opacity-50 placeholder:text-foreground/20 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2 relative">
-        <div className="flex flex-col ml-2">
-          <label htmlFor="pityOffset" className="text-xs font-display uppercase tracking-widest font-semibold text-foreground/60">Current Pity</label>
-        </div>
-        {/* Double-Bezel Outer Shell */}
-        <div className={`relative w-full rounded-[2rem] p-1.5 ring-1 transition-colors duration-700 ${isPityOverLimit ? 'bg-red-500/10 ring-red-500/30' : 'bg-foreground/5 ring-foreground/10'}`}>
-          <input
-            id="pityOffset"
-            type="number"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="0"
-            value={pityOffset}
-            onChange={(e) => setPityOffset(e.target.value)}
-            onBlur={() => {
-              if (Number(pityOffset) >= hardPity) {
-                setPityOffset(hardPity - 1);
-              }
-            }}
-            min={0}
-            max={hardPity - 1}
-            className={`flex h-14 w-full rounded-[calc(2rem-6px)] px-6 py-2 text-lg font-mono font-medium shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isPityOverLimit ? 'bg-red-950/20 text-red-400 placeholder:text-red-500/30' : 'bg-surface text-foreground placeholder:text-foreground/20'}`}
-          />
-        </div>
-        <div className="flex justify-between items-start ml-2 mt-1">
-          <span className="text-xs text-foreground/40">Pulls since your last 5-star character.</span>
-          {isPityOverLimit && (
-            <span className="text-[10px] font-semibold tracking-wider uppercase text-red-400 max-w-[120px] text-right">
-              Exceeds hard pity ({hardPity})
-            </span>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
-      {/* Accessible touch target wrapper */}
-      <div className="flex items-center min-h-[44px] mt-4 ml-2">
-        <label htmlFor="guarantee" className="flex items-center gap-4 cursor-pointer w-full group">
-          <div className="relative flex items-center justify-center">
+      <div ref={valuesRef} className="flex flex-col gap-6 w-full">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="targetPulls" className="text-xs font-display uppercase tracking-widest font-semibold text-foreground/60 ml-2">Available Pulls</label>
+          {/* Double-Bezel Outer Shell */}
+          <div className="relative w-full rounded-[2rem] bg-foreground/5 p-1.5 ring-1 ring-foreground/10 transition-colors duration-700">
             <input
-              type="checkbox"
-              id="guarantee"
-              checked={guarantee}
-              onChange={(e) => setGuarantee(e.target.checked)}
-              className="peer h-6 w-6 cursor-pointer appearance-none rounded-lg border border-foreground/20 bg-transparent checked:border-[#35C58A] checked:bg-[#35C58A] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.1] active:scale-[0.9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              id="targetPulls"
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="0"
+              value={pulls}
+              onChange={(e) => setPulls(e.target.value)}
+              min={1}
+              className="flex h-14 w-full rounded-[calc(2rem-6px)] bg-surface px-6 py-2 text-lg font-mono font-medium shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent text-foreground disabled:cursor-not-allowed disabled:opacity-50 placeholder:text-foreground/20 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
-            <svg aria-hidden="true" className="absolute w-3.5 h-3.5 pointer-events-none opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 text-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
           </div>
-          <span className="text-sm font-sans font-medium text-foreground/80 group-hover:text-foreground transition-colors">
-            On Guarantee (Next 5★ is Rate-Up)
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="budget" className="text-xs font-display uppercase tracking-widest font-semibold text-foreground/60 ml-2">Budget (PHP)</label>
+          <div className="relative w-full rounded-[2rem] bg-foreground/5 p-1.5 ring-1 ring-foreground/10 transition-colors duration-700">
+            <input
+              id="budget"
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="0"
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              min={0}
+              className="flex h-14 w-full rounded-[calc(2rem-6px)] bg-surface px-6 py-2 text-lg font-mono font-medium shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent text-foreground disabled:cursor-not-allowed disabled:opacity-50 placeholder:text-foreground/20 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          </div>
+          <span className="text-xs text-foreground/60 ml-2 mt-1">
+            {Number(budget) > 0 && activePreset.pricing.costPerPull > 0
+              ? `+ ${Math.floor(Number(budget) / activePreset.pricing.costPerPull)} extra pulls at ₱${activePreset.pricing.costPerPull} each`
+              : 'Enter a budget to calculate extra pulls.'}
           </span>
-        </label>
+        </div>
+
+        <div className="flex flex-col gap-2 relative">
+          <div className="flex flex-col ml-2">
+            <label htmlFor="pityOffset" className="text-xs font-display uppercase tracking-widest font-semibold text-foreground/60">Current Pity</label>
+          </div>
+          {/* Double-Bezel Outer Shell */}
+          <div className={`relative w-full rounded-[2rem] p-1.5 ring-1 transition-colors duration-700 ${isPityOverLimit ? 'bg-red-500/10 ring-red-500/30' : 'bg-foreground/5 ring-foreground/10'}`}>
+            <input
+              id="pityOffset"
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="0"
+              value={pityOffset}
+              onChange={(e) => setPityOffset(e.target.value)}
+              onBlur={() => {
+                if (Number(pityOffset) >= hardPity) {
+                  setPityOffset(hardPity - 1);
+                }
+              }}
+              min={0}
+              max={hardPity - 1}
+              className={`flex h-14 w-full rounded-[calc(2rem-6px)] px-6 py-2 text-lg font-mono font-medium shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isPityOverLimit ? 'bg-red-950/20 text-red-400 placeholder:text-red-500/30' : 'bg-surface text-foreground placeholder:text-foreground/20'}`}
+            />
+          </div>
+          <div className="flex justify-between items-start ml-2 mt-1">
+            <span className="text-xs text-foreground/60">Pulls since your last 5-star character.</span>
+            {isPityOverLimit && (
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-red-600 dark:text-red-400 max-w-[120px] text-right">
+                Exceeds hard pity ({hardPity})
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Accessible touch target wrapper */}
+        <div className="flex items-center min-h-[44px] mt-4 ml-2">
+          <label htmlFor="guarantee" className="flex items-center gap-4 cursor-pointer w-full group">
+            <div className="relative flex items-center justify-center">
+              <input
+                type="checkbox"
+                id="guarantee"
+                checked={guarantee}
+                onChange={(e) => setGuarantee(e.target.checked)}
+                className="peer h-6 w-6 cursor-pointer appearance-none rounded-lg border border-foreground/20 bg-transparent checked:border-rarity-jade checked:bg-rarity-jade transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.1] active:scale-[0.9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              />
+              <svg aria-hidden="true" className="absolute w-3.5 h-3.5 pointer-events-none opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 text-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="text-sm font-sans font-medium text-foreground/80 group-hover:text-foreground transition-colors">
+              On Guarantee (Next 5★ is Rate-Up)
+            </span>
+          </label>
+        </div>
       </div>
     </div>
   );

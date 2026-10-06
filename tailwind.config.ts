@@ -7,6 +7,7 @@ const config: Config = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -17,6 +18,10 @@ const config: Config = {
         'surface-border': 'hsl(var(--surface-border))',
         accent: 'hsl(var(--accent))',
         'accent-fg': 'hsl(var(--accent-fg))',
+        'rarity-jade': 'hsl(var(--rarity-jade))',
+        'rarity-gold': 'hsl(var(--rarity-gold))',
+        'rarity-amethyst': 'hsl(var(--rarity-amethyst))',
+        'rarity-blue': 'hsl(var(--rarity-blue))',
       },
       fontFamily: {
         sans: ['var(--font-space-grotesk)'],

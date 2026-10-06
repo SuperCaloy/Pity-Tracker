@@ -1,0 +1,16 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "launchOptions": {
+      "headless": true
+    }
+  },
+  "capabilities": ["pdf", "devtools"],
+  "testIdAttribute": "data-testid",
+  "outputDir": "test-results/mcp",
+  "timeouts": {
+    "action": 10000,
+    "navigation": 30000,
+    "settle": 500
+  }
+}

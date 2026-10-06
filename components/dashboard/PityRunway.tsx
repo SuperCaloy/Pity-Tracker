@@ -1,16 +1,21 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Card } from '../ui/Card';
+import { motion, AnimatePresence } from 'framer-motion';
+import { formatCurrency } from '../../lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import type { Transition } from 'framer-motion';
 
 interface PityRunwayProps {
   currentPull: number;
   maxPulls: number;
   softPityStart?: number;
   thresholds?: { p50: number, p80: number, p95: number };
+  costPerPull?: number;
+  currency?: string;
 }
 
-export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thresholds }: PityRunwayProps) {
+export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thresholds, costPerPull, currency }: PityRunwayProps) {
+  const reducedMotion = useReducedMotion();
   // Guard against invalid values
   const safeMax = Math.max(1, maxPulls);
   const fillPercentage = Math.min(100, Math.max(0, (currentPull / safeMax) * 100));
@@ -33,7 +38,11 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
   }
 
   const pullsToTarget = Math.max(0, nextTargetPulls - currentPull);
-  const costToTarget = pullsToTarget * 3; // ~$3 per pull
+  const costToTarget = pullsToTarget * (costPerPull ?? 0);
+
+  const transition: Transition = reducedMotion
+    ? { duration: 0.01 }
+    : { type: "spring", damping: 25, stiffness: 120, mass: 0.8, bounce: 0.2 };
 
   const renderMarker = (pulls: number, label: string, colorClass: string, position: 'top' | 'bottom' = 'top') => {
     if (!pulls || pulls === Infinity) return null;
@@ -63,21 +72,46 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
             <p className="text-base text-foreground/50">Your stash mapped against key milestones.</p>
           </div>
           
-          {pullsToTarget > 0 ? (
-            <div className="flex flex-col items-start md:items-end">
-              <span className="text-[10px] md:text-xs text-foreground/40 uppercase tracking-widest font-semibold mb-1">To {nextTargetLabel}</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl md:text-3xl font-mono text-foreground tracking-tight">{pullsToTarget}</span>
-                <span className="text-sm md:text-base font-sans text-foreground/50 font-medium">pulls</span>
-                <span className="text-sm md:text-base text-foreground/30 font-mono ml-2">(~${costToTarget})</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-start md:items-end">
-              <span className="text-[10px] md:text-xs text-[#F0B429]/60 uppercase tracking-widest font-semibold mb-1">Status</span>
-              <span className="text-2xl md:text-3xl font-mono text-[#F0B429] tracking-tight">Guaranteed</span>
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {pullsToTarget > 0 ? (
+              <motion.div
+                key="target"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col items-start md:items-end"
+              >
+                <span className="text-[10px] md:text-xs text-foreground/40 uppercase tracking-widest font-semibold mb-1">To {nextTargetLabel}</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl md:text-3xl font-mono text-foreground tracking-tight">{pullsToTarget}</span>
+                  <span className="text-sm md:text-base font-sans text-foreground/50 font-medium">pulls</span>
+                  {costPerPull !== undefined && costPerPull > 0 && (
+                    <span className="text-sm md:text-base text-foreground/30 font-mono ml-2">(~{formatCurrency(costToTarget, currency || 'PHP')})</span>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="guaranteed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col items-start md:items-end"
+              >
+                <span className="text-[10px] md:text-xs text-rarity-gold/60 uppercase tracking-widest font-semibold mb-1">Status</span>
+                <motion.span
+                  className="text-2xl md:text-3xl font-mono text-rarity-gold tracking-tight"
+                  initial={reducedMotion ? { scale: 1 } : { scale: 1 }}
+                  animate={reducedMotion ? { scale: 1 } : { scale: [1, 1.05, 1] }}
+                  transition={{ duration: reducedMotion ? 0.01 : 0.3 }}
+                >
+                  Guaranteed
+                </motion.span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="relative w-full pt-8 pb-8">
@@ -86,10 +120,10 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
             
             {/* Fill Bar */}
             <motion.div 
-              className="absolute top-0 bottom-0 left-0 bg-[#35C58A] rounded-full shadow-[0_0_20px_rgba(53,197,138,0.4)] z-20"
+              className="absolute top-0 bottom-0 left-0 bg-rarity-jade rounded-full shadow-[0_0_20px_rgba(53,197,138,0.4)] z-20"
               initial={{ width: 0 }}
               animate={{ width: `${fillPercentage}%` }}
-              transition={{ type: "spring", damping: 25, stiffness: 120, mass: 0.8, bounce: 0.2 }}
+              transition={transition}
             >
               {/* Glossy overlay */}
               <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-full" />
@@ -109,13 +143,17 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
           {/* Labels Overlay */}
           <div className="absolute inset-0 w-full pointer-events-none flex items-center pt-8 pb-8">
             <div className="relative w-full h-full">
-              <span className="absolute left-0 bottom-1/2 -mb-8 text-xs font-mono text-foreground/40 translate-y-full">0</span>
-              
-              {softPityStart && renderMarker(softPityStart, "Soft Pity", "text-foreground/60", "bottom")}
-              {thresholds?.p50 && renderMarker(thresholds.p50, "50%", "text-[#35C58A]", "top")}
-              {thresholds?.p80 && renderMarker(thresholds.p80, "80%", "text-[#35C58A]", "top")}
-              
-              <span className="absolute right-0 bottom-1/2 -mb-8 text-xs font-mono text-foreground/40 translate-y-full">{safeMax}</span>
+<span className="absolute left-0 bottom-1/2 -mb-8 text-xs font-mono text-foreground/40 translate-y-full">0</span>
+               
+               {softPityStart && renderMarker(softPityStart, "Soft Pity", "text-foreground/60", "bottom")}
+               {thresholds?.p50 && thresholds?.p80 && 
+                 Math.abs((thresholds.p50 / safeMax) * 100 - (thresholds.p80 / safeMax) * 100) < 8
+                   ? null
+                   : thresholds?.p50 && renderMarker(thresholds.p50, "50%", "text-rarity-jade", "top")}
+               {thresholds?.p80 && renderMarker(thresholds.p80, "80%", "text-rarity-jade", "top")}
+               {thresholds?.p95 && renderMarker(thresholds.p95, "95%", "text-rarity-gold", "top")}
+               
+               <span className="absolute right-0 bottom-1/2 -mb-8 text-xs font-mono text-foreground/40 translate-y-full">{safeMax}</span>
             </div>
           </div>
         </div>

@@ -48,9 +48,9 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 5.0 Phase 1 (Aug 12 - Sep 1, 2026)",
+      name: "Version 7.1 Phase 1 (Sep 23 - Oct 13, 2026)",
       featured: [
-        { name: "Mualani", rate: 0.003 }
+        { name: "Vesna", rate: 0.003 }
       ]
     }
   },
@@ -61,10 +61,10 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.007, softPityStart: 63, hardPity: 80, rampRate: 0.07, winRate: 0.375, rateUpProb: 0.75, M: 2, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 5.0 Phase 1 Weapon",
+      name: "Version 7.1 Phase 1 Weapon (Sep 23 - Oct 13, 2026)",
       featured: [
-        { name: "Signature Weapon A", rate: 0.002625 },
-        { name: "Signature Weapon B", rate: 0.002625 }
+        { name: "Beyond the Chrysalis", rate: 0.002625 },
+        { name: "Hymn of the Maelstrom", rate: 0.002625 }
       ]
     }
   },
@@ -75,9 +75,9 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 4.5 Phase 1 (Aug 25 - Sep 16, 2026)",
+      name: "Version 4.6 (Sep 28 - Nov 10, 2026)",
       featured: [
-        { name: "Robin (Summeretto)", rate: 0.003 }
+        { name: "Pearl", rate: 0.003 }
       ]
     }
   },
@@ -88,9 +88,9 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, rampRate: 0.06, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 3.1 Phase 2 (Until Sep 8, 2026)",
+      name: "Version 3.2 Phase 2 (Sep 30 - Oct 20, 2026)",
       featured: [
-        { name: "Jane Doe", rate: 0.003 }
+        { name: "Roxy", rate: 0.003 }
       ]
     }
   },
@@ -101,9 +101,9 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.008, softPityStart: 66, hardPity: 80, rampRate: 0.0469, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' },
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Version 3.6 Phase 1 (Aug 20 - Oct 1, 2026)",
+      name: "Version 3.7 Phase 1 (Sep 30 - Oct 22, 2026)",
       featured: [
-        { name: "Zhezhi", rate: 0.004 }
+        { name: "Hsin", rate: 0.004 }
       ]
     }
   },
@@ -114,9 +114,9 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.007, hardPity: 200, winRate: 1, has50_50: false, modelKind: 'counter', guaranteeCost: 200 }, 
     pricing: { currency: "PHP", packPrice: 3990, pullsPerPack: 55, costPerPull: 72.55, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Global Banner (Aug 18 - Sep 1, 2026)",
+      name: "Band Rerun (Oct 6 - Oct 13, 2026)",
       featured: [
-        { name: "Dress Hina", rate: 0.007 }
+        { name: "Kazusa (Band)", rate: 0.007 }
       ]
     }
   },
@@ -127,9 +127,9 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.006, softPityStart: 74, hardPity: 90, winRate: 0.5, has50_50: true, resetsCounterOnGuarantee: true, modelKind: 'bernoulli' }, 
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 50.5, costPerPull: 98.81, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Global Release (Aug 9 - 30, 2026)",
+      name: "Version 1.5 Phase 2 (Sep 24 - Oct 15, 2026)",
       featured: [
-        { name: "Liino", rate: 0.003 }
+        { name: "Yvonne", rate: 0.003 }
       ]
     }
   },
@@ -140,9 +140,9 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.02, hardPity: 200, winRate: 1, has50_50: false, modelKind: 'counter', guaranteeCost: 200 }, 
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 25, costPerPull: 199.6, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Evangelion Collab (From Aug 22, 2026)",
+      name: "Halloween 2026 (Oct 8 - Oct 28, 2026)",
       featured: [
-        { name: "Asuka", rate: 0.02 }
+        { name: "Belorta (Pumpkin Witch)", rate: 0.02 }
       ]
     }
   },
@@ -166,7 +166,7 @@ export const PRESETS: GamePreset[] = [
     curve: { baseRate: 0.01, hardPity: 120, winRate: 1, has50_50: false, modelKind: 'counter', guaranteeCost: 120 }, 
     pricing: { currency: "PHP", packPrice: 4990, pullsPerPack: 40, costPerPull: 124.75, pricingDisclaimer: "Based on official PHP pricing." },
     activeBanner: {
-      name: "Secret Summer (Jun 25 - Aug 26, 2026)",
+      name: "Banner TBD",
       featured: [
         { name: "Fumyr", rate: 0.01 }
       ]

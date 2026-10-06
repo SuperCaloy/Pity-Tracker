@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HowItWorksMotion } from '@/components/HowItWorksMotion';
+import { PityCurveDiagram } from '@/components/PityCurveDiagram';
 
 export default function HowItWorksPage() {
   return (
@@ -12,48 +13,52 @@ export default function HowItWorksPage() {
       <section>
         <h2 className="font-display text-xl md:text-2xl font-bold">What is gacha?</h2>
         <p className="font-sans text-base md:text-lg text-foreground/70 max-w-2xl">
-          A randomized in-game banner system. Each pull, wish, or summon has a
-          small chance to grant a rare item, and each game publishes roughly how
-          that chance behaves.
+          Gacha games sell you random draws. Each pull, wish, or summon has a
+          small chance of giving you the rare character or item on the banner,
+          and the game makers publish those chances so players know roughly
+          how lucky they need to be.
         </p>
       </section>
 
       <section>
         <h2 className="font-display text-xl md:text-2xl font-bold">What is pity?</h2>
         <p className="font-sans text-base md:text-lg text-foreground/70 max-w-2xl">
-          A safety net. After a long streak of misses, the game quietly raises
-          your odds, and after a set number of pulls a rare item is guaranteed.
-          This tool models that safety net.
+          Pity is the safety net hiding behind those draws. The more pulls you
+          make without getting the rare item, the better your chances get,
+          until the game simply hands it to you after a set number of pulls.
+          This tracker does the math on that safety net for you.
         </p>
       </section>
+
+      <PityCurveDiagram />
 
       <section>
         <h2 className="font-display text-xl md:text-2xl font-bold">What this tool does</h2>
         <p className="font-sans text-base md:text-lg text-foreground/70 max-w-2xl">
-          You enter your pull count, your current pity offset, and whether you
-          already hold a guarantee. The tracker computes your exact chance of a
-          featured item, the odds of winning within your budget, and common
-          thresholds: about even odds (p50), a solid chance (p80), and
-          near-certain (p95).
+          Tell it how many pulls you have saved, how many pulls it has been
+          since your last rare item, and whether your next rare item is
+          promised to be the featured one. It tells you your chances of
+          getting the featured item, how far your budget will stretch, and
+          three simple answers: how many pulls give you a coin flip chance,
+          a strong chance, and near certainty.
         </p>
       </section>
 
       <section>
         <h2 className="font-display text-xl md:text-2xl font-bold">How to use it</h2>
         <ol className="font-sans text-base md:text-lg text-foreground/70 max-w-2xl list-decimal pl-6 flex flex-col gap-2">
-          <li>Pick your game banner.</li>
-          <li>Enter your pulls and pity offset.</li>
-          <li>Optionally add a budget.</li>
-          <li>Hit Calculate Results, then read the runway bar, success gauge, and threshold cards.</li>
+          <li>Pick your game.</li>
+          <li>Enter your saved pulls and how long it has been since your last rare item.</li>
+          <li>Add a budget if you want.</li>
+          <li>Hit Calculate Results, then read the runway bar, the success rate, and the average luck, good odds, and near guarantee cards.</li>
         </ol>
       </section>
 
       <section>
         <h2 className="font-display text-xl md:text-2xl font-bold">What it cannot know</h2>
         <p className="font-sans text-base md:text-lg text-foreground/70 max-w-2xl">
-          These are published-model probabilities, not promises. Real luck is
-          real. Where a game publishes its official rate curve, this tool uses
-          it.
+          These numbers come from the official rates the games publish. They
+          are still chances, not promises. Real luck is still luck.
         </p>
       </section>
       </HowItWorksMotion>

@@ -100,7 +100,7 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
                 transition={{ duration: 0.2 }}
                 className="flex flex-col items-start md:items-end"
               >
-                <span className="text-[10px] md:text-xs text-rarity-gold/60 uppercase tracking-widest font-semibold mb-1">Status</span>
+                <span className="text-[10px] md:text-xs text-foreground/40 uppercase tracking-widest font-semibold mb-1">Status</span>
                 <motion.span
                   className="text-2xl md:text-3xl font-mono text-rarity-gold tracking-tight"
                   initial={reducedMotion ? { scale: 1 } : { scale: 1 }}
@@ -120,7 +120,7 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
             
             {/* Fill Bar */}
             <motion.div 
-              className="absolute top-0 bottom-0 left-0 bg-rarity-jade rounded-full shadow-[0_0_20px_rgba(53,197,138,0.4)] z-20"
+              className="absolute top-0 bottom-0 left-0 bg-accent rounded-full shadow-[0_0_20px_hsl(var(--accent)_/_0.4)] z-20"
               initial={{ width: 0 }}
               animate={{ width: `${fillPercentage}%` }}
               transition={transition}
@@ -151,7 +151,7 @@ export function PityRunway({ currentPull = 0, maxPulls = 180, softPityStart, thr
                    ? null
                    : thresholds?.p50 && renderMarker(thresholds.p50, "50%", "text-rarity-jade", "top")}
                {thresholds?.p80 && renderMarker(thresholds.p80, "80%", "text-rarity-jade", "top")}
-               {thresholds?.p95 && renderMarker(thresholds.p95, "95%", "text-rarity-gold", "top")}
+                {thresholds?.p95 && renderMarker(thresholds.p95, "95%", "text-foreground/60", "top")}
                
                <span className="absolute right-0 bottom-1/2 -mb-8 text-xs font-mono text-foreground/40 translate-y-full">{safeMax}</span>
             </div>

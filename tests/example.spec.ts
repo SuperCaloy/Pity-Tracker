@@ -13,7 +13,7 @@ test('home page renders hero and CTA navigates to tracker', async ({ page }) => 
 test('home page renders calculator and produces a result', async ({ page }) => {
   await page.goto('/tracker');
 
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Pity Tracker');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Calculate Results' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Calculate Results' }).click();

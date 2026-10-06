@@ -10,10 +10,31 @@ import { ThresholdCards } from '@/components/dashboard/ThresholdCards';
 import { ResultSummary } from '@/components/dashboard/ResultSummary';
 import { CalculationInput, CalculationResult } from '@/types/pity';
 import { usePityCalculation } from '@/hooks/usePityCalculation';
-import Link from 'next/link';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PRESETS } from '@/lib/config/presets';
 import { validateCalculationInput } from '@/lib/validation/calculator-schema';
+
+function buildCandidate(
+  preset: string,
+  pulls: string | number,
+  budget: string,
+  pityOffset: string | number,
+  guarantee: boolean,
+  targetItemName: string | undefined
+): CalculationInput {
+  const presetObj = PRESETS.find(p => p.id === preset) || PRESETS[0];
+  const costPerPull = presetObj?.pricing?.costPerPull || 0;
+  const extraPulls = (Number(budget) > 0 && costPerPull > 0) ? Math.floor(Number(budget) / costPerPull) : 0;
+  const totalPulls = (Number(pulls) || 0) + extraPulls;
+
+  return {
+    presetId: preset,
+    pullsInput: totalPulls,
+    pityOffset: Number(pityOffset) || 0,
+    guarantee: guarantee,
+    targetItemName: targetItemName
+  };
+}
 
 export default function Home() {
   // Hoisted Form State (Draft)
@@ -115,18 +136,7 @@ export default function Home() {
   }, [showModal]);
 
   const handleCalculate = () => {
-    const presetObj = PRESETS.find(p => p.id === preset) || PRESETS[0];
-    const costPerPull = presetObj?.pricing?.costPerPull || 0;
-    const extraPulls = (Number(budget) > 0 && costPerPull > 0) ? Math.floor(Number(budget) / costPerPull) : 0;
-    const totalPulls = (Number(pulls) || 0) + extraPulls;
-
-    const candidate: CalculationInput = {
-      presetId: preset,
-      pullsInput: totalPulls,
-      pityOffset: Number(pityOffset) || 0,
-      guarantee: guarantee,
-      targetItemName: targetItemName
-    };
+    const candidate: CalculationInput = buildCandidate(preset, pulls, budget, pityOffset, guarantee, targetItemName);
     const validation = validateCalculationInput(candidate);
     if (!validation.ok) {
       setInputError(validation.errors.join('. '));
@@ -166,27 +176,11 @@ export default function Home() {
 
   return (
     <main className="flex flex-col w-full min-h-[100dvh] bg-background">
-      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-32 pt-4 md:pt-8 lg:pt-10 flex flex-col gap-10 md:gap-16 lg:gap-24">
+      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-32 md:pb-16 pt-6 md:pt-10 flex flex-col gap-8 md:gap-12">
         
-        {/* Header section (hidden on mobile when in dashboard view to save space, visible on tablet+) */}
-        <motion.header
-          className={`flex-col gap-4 md:gap-6 w-full items-center text-center ${mobileTab === 'dashboard' ? 'hidden md:flex' : 'flex'}`}
-          initial={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={reducedMotion ? { duration: 0.01 } : { duration: 1, ease: [0.32, 0.72, 0, 1] }}
-        >
-          <h1 className="font-display font-bold tracking-tight text-foreground leading-[1.1] text-2xl md:text-3xl">
-            Pity Tracker
-          </h1>
-          <p className="font-sans text-foreground/50 text-sm md:text-base">
-            Enter your pulls and pity offset, then calculate your exact odds.
-          </p>
-          <Link href="/how-it-works" className="font-sans text-sm text-foreground/50 hover:text-foreground underline underline-offset-4 transition-colors duration-700">How it works</Link>
-        </motion.header>
-
         {/* Main Layout (Asymmetrical Bento) */}
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 lg:gap-12 items-start w-full"
+          className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start w-full"
           variants={staggerContainer}
           initial="initial"
           animate="animate"
@@ -195,7 +189,7 @@ export default function Home() {
           {/* Left Column: Calculator */}
           <motion.section 
             variants={fadeInUp} 
-            className={`md:col-span-5 lg:col-span-4 w-full flex-col gap-6 md:gap-8 ${mobileTab === 'calculator' ? 'flex' : 'hidden md:flex'}`}
+            className={`md:col-span-5 lg:col-span-4 w-full flex-col gap-6 md:gap-4 ${mobileTab === 'calculator' ? 'flex' : 'hidden md:flex'}`}
           >
             <motion.div
               key={isMobile ? mobileTab : 'static'}
@@ -204,7 +198,7 @@ export default function Home() {
               transition={reducedMotion ? { duration: 0.01 } : { duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
               className="w-full"
             >
-            <div className="md:sticky md:top-24 z-10 w-full flex flex-col gap-6 md:gap-8">
+            <div className="w-full flex flex-col gap-6 md:gap-4">
               <CalculatorForm 
                 preset={preset} setPreset={setPreset}
                 pulls={pulls} setPulls={setPulls}
@@ -214,12 +208,12 @@ export default function Home() {
                 targetItemName={targetItemName} setTargetItemName={setTargetItemName}
               />
               
-              {/* Premium Button Island Architecture - sticky on desktop so always reachable */}
-              <div className="flex w-full flex-col items-center gap-2 md:gap-4">
+              {/* Calculate footer, sticky so it stays reachable when Advanced is open */}
+              <div className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] md:bottom-6 z-10 flex w-full flex-col items-center gap-2 md:gap-4 rounded-2xl bg-background/80 p-2 backdrop-blur-xl">
                 <button 
                   ref={calculateButtonRef}
                   onClick={handleCalculate}
-                  className="group relative w-full flex items-center justify-center gap-3 overflow-hidden rounded-full bg-foreground text-background px-6 py-4 md:px-8 md:py-5 font-display text-base md:text-lg tracking-wide shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.98]"
+                  className="group relative w-full flex items-center justify-center gap-3 overflow-hidden rounded-full bg-foreground text-background px-6 py-4 md:px-8 md:py-3.5 font-display text-base md:text-lg tracking-wide shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
                   <span className="relative z-10">Calculate Results</span>
@@ -232,6 +226,8 @@ export default function Home() {
                 <AnimatePresence>
                   {inputError && (
                     <motion.p
+                      role="alert"
+                      aria-live="polite"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
@@ -250,14 +246,14 @@ export default function Home() {
           {/* Right Column: Dashboard */}
           <motion.section 
             variants={fadeInUp} 
-            className={`md:col-span-7 lg:col-span-8 flex-col gap-6 md:gap-8 lg:gap-12 w-full ${mobileTab === 'dashboard' ? 'flex' : 'hidden md:flex'}`}
+            className={`md:col-span-7 lg:col-span-8 flex-col gap-6 md:gap-8 w-full ${mobileTab === 'dashboard' ? 'flex' : 'hidden md:flex'}`}
           >
             <motion.div
               key={isMobile ? mobileTab : 'static'}
               initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={reducedMotion ? { duration: 0.01 } : { duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-              className="flex flex-col gap-6 md:gap-8 lg:gap-12 w-full"
+              className="flex flex-col gap-6 md:gap-8 w-full"
             >
             <PityRunway 
               currentPull={activeInput.pullsInput + activeInput.pityOffset} 

@@ -5,29 +5,29 @@
 
 @layer base {
   :root {
-    --background: 40 30% 97%;
-    --foreground: 222 30% 10%;
+    --background: 45 40% 96%;
+    --foreground: 240 25% 12%;
     --surface: 0 0% 100%;
-    --surface-border: 222 20% 0% / 0.08;
-    --accent: 168 60% 30%;
+    --surface-border: 45 12% 86%;
+    --accent: 345 75% 44%;
     --accent-fg: 0 0% 100%;
-    --rarity-jade: 152 55% 34%;
-    --rarity-gold: 38 90% 40%;
-    --rarity-amethyst: 262 50% 48%;
-    --rarity-blue: 215 75% 45%;
+    --rarity-jade: 160 60% 32%;
+    --rarity-gold: 38 90% 36%;
+    --rarity-amethyst: 265 60% 45%;
+    --rarity-blue: 215 75% 42%;
   }
 
   .dark {
-    --background: 222 30% 5%;
-    --foreground: 45 30% 94%;
-    --surface: 222 25% 10% / 0.6;
-    --surface-border: 45 20% 100% / 0.08;
-    --accent: 168 65% 50%;
-    --accent-fg: 222 30% 5%;
-    --rarity-jade: 151 60% 50%;
-    --rarity-gold: 42 92% 58%;
-    --rarity-amethyst: 262 85% 70%;
-    --rarity-blue: 215 90% 62%;
+    --background: 240 30% 7%;
+    --foreground: 45 25% 93%;
+    --surface: 240 28% 12%;
+    --surface-border: 240 15% 24%;
+    --accent: 345 85% 68%;
+    --accent-fg: 240 30% 7%;
+    --rarity-jade: 160 65% 48%;
+    --rarity-gold: 42 95% 60%;
+    --rarity-amethyst: 265 85% 72%;
+    --rarity-blue: 215 90% 64%;
   }
 }
 
